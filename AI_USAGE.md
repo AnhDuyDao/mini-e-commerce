@@ -58,3 +58,61 @@
                     .toList();
     ```
 
+3.
+- Ngày giờ: 14/03/2006 9:35
+- Công cụ: ChatGPT
+- Prompt:Xây dựng endpoint GET https://dummyjson.com/products?limit=12
+```
+{ 
+    "products": [
+        {
+            "id": 1,
+            "title": "Essence Mascara Lash Princess",
+            "description": "The Essence Mascara Lash Princess is a popular mascara known for its volumizing and lengthening effects. Achieve dramatic lashes with this long-lasting and cruelty-free formula.",
+            "price": 9.99,
+            "stock": 99,
+            "images": [
+            "https://cdn.dummyjson.com/product-images/beauty/essence-mascara-lash-princess/1.webp"
+            ],
+            "thumbnail": "https://cdn.dummyjson.com/product-images/beauty/essence-mascara-lash-princess/thumbnail.webp"
+        },...
+    ], 
+    "total": 194, 
+    "skip": 0, 
+    "limit": 12 
+}
+```
+- Sau đó: tạo dto/ProductPageResponse, thêm code vào ProductRepository, sửa code ở ProductService và ProductController
+```
+    @Query(value = "SELECT * FROM product LIMIT :limit OFFSET :skip", nativeQuery = true)
+    List<Product> findProducts(int limit, int skip);
+```
+```
+    @GetMapping({"/products", "/product"})
+    public ProductPageResponse getProducts(
+            @RequestParam(defaultValue = "12") int limit,
+            @RequestParam(defaultValue = "0") int skip
+    ) {
+        return productService.getProducts(limit, skip);
+    }
+```
+```
+public ProductPageResponse getProducts(int limit, int skip) {
+
+        List<Product> products = productRepository.findProducts(limit,skip);
+
+        List<ProductResponse> productsResponse = products
+                .stream()
+                .map(ProductMapper::toDto)
+                .toList();
+
+        long total = productRepository.count();
+
+        return new ProductPageResponse(
+                productsResponse,
+                total,
+                skip,
+                limit
+        );
+    }
+```
