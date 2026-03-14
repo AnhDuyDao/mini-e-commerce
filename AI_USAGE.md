@@ -116,3 +116,12 @@ public ProductPageResponse getProducts(int limit, int skip) {
         );
     }
 ```
+4.
+- Ngày giờ: 15/03/2006 11:50
+- Công cụ: ChatGPT
+- Prompt: Xử lí lỗi không đúng enpoint GET /producs thay vì GET /products
+- Sau đó: tạo dto/ErrorResponse, tạo GlobalExceptionHandler với method handleNoHandlerFound, thêm properties vào application.
+```
+spring.mvc.throw-exception-if-no-handler-found=true
+spring.web.resources.add-mappings=false
+```
