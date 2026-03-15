@@ -199,6 +199,9 @@ VALUES (1);
 INSERT INTO cart (user_id)
 VALUES (2);
 
+INSERT INTO cart (user_id)
+VALUES (1);
+
 INSERT INTO cart_item (cart_id, product_id, quantity)
 VALUES (1, 2, 2);
 
@@ -216,3 +219,9 @@ VALUES (2, 11, 4);
 
 INSERT INTO cart_item (cart_id, product_id, quantity)
 VALUES (2, 6, 1);
+
+INSERT INTO cart_item (cart_id, product_id, quantity)
+VALUES (3, 3, 1);
+
+INSERT INTO cart_item (cart_id, product_id, quantity)
+VALUES (3, 4, 3);

@@ -6,21 +6,22 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class CartProductResponse {
+public class CartResponse {
     private Long id;
 
-    private String title;
-
-    private BigDecimal price;
-
-    private Integer quantity;
+    private List<CartItemResponse> products;
 
     private BigDecimal total;
 
-    private String thumbnail;
+    private Long userId;
+
+    private Integer totalProducts;
+
+    private Integer totalQuantity;
 }

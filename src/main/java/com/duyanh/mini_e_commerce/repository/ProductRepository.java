@@ -10,3 +10,4 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Query(value = "SELECT * FROM product LIMIT :limit OFFSET :skip", nativeQuery = true)
     List<Product> findProducts(int limit, int skip);
 }
+

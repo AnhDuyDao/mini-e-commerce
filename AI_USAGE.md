@@ -214,3 +214,193 @@ spring.web.resources.add-mappings=false
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 ```
+7.
+- Ngày giờ: 15/03/2006 13:05
+- Công cụ: ChatGPT
+- Prompt: Thiết kế Cart và CartItem entity
+- Sau đó: tạo Cart và CartItem, thêm dự liệu vào file data.sql
+```
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class Cart {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private Long userId;
+
+    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CartItem> items;
+}
+```
+```
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class CartItem {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private Integer quantity;
+
+    @ManyToOne
+    @JoinColumn(name = "cart_id")
+    private Cart cart;
+
+    @ManyToOne
+    @JoinColumn(name = "product_id")
+    private Product product;
+}
+```
+8.
+- Ngày giờ: 15/03/2006 18:30
+- Công cụ: ChatGPT
+- Prompt: Xem giỏ hàng (list items + tổng tiền). Với GET http://localhost:8080/cart/user/1
+- Sau đó: tạo CartController, tạo dto/CartItemResponse, dto/CartListResponse, dto/CartResponse, CartMapper, CartRepository, CartService
+```
+@RestController
+@RequestMapping("/cart")
+public class CartController {
+    private final CartService cartService;
+
+    public CartController(CartService cartService) {
+        this.cartService = cartService;
+    }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<CartListResponse> getUserCarts(
+            @PathVariable Long userId
+    ) {
+        return ResponseEntity.ok(cartService.getCartsByUser(userId));
+    }
+}
+```
+```
+public interface CartRepository extends JpaRepository<Cart, Long> {
+    @Query("""
+        SELECT DISTINCT c
+        FROM Cart c
+        LEFT JOIN FETCH c.items ci
+        LEFT JOIN FETCH ci.product
+        WHERE c.userId = :userId
+    """)
+    List<Cart> findCartsByUserId(@Param("userId") Long userId);
+}
+```
+```
+@Service
+public class CartService {
+    private final CartRepository cartRepository;
+
+    public CartService(CartRepository cartRepository) {
+        this.cartRepository = cartRepository;
+    }
+
+    public CartListResponse getCartsByUser(Long userId) {
+
+        List<Cart> carts = cartRepository.findCartsByUserId(userId);
+
+        List<CartResponse> cartResponses = carts.stream()
+                .map(this::buildCartResponse)
+                .toList();
+
+        return buildCartListResponse(cartResponses);
+    }
+
+    private CartResponse buildCartResponse(Cart cart) {
+
+        int totalProducts = calculateTotalProducts(cart);
+
+        int totalQuantity = calculateTotalQuantity(cart);
+
+        BigDecimal total = calculateTotal(cart);
+
+        return CartMapper.toCartDto(
+                cart,
+                total,
+                totalProducts,
+                totalQuantity
+        );
+    }
+
+    private BigDecimal calculateTotal(Cart cart) {
+
+        return cart.getItems().stream()
+                .map(item ->
+                        item.getProduct().getPrice()
+                                .multiply(BigDecimal.valueOf(item.getQuantity()))
+                )
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+    private int calculateTotalQuantity(Cart cart) {
+
+        return cart.getItems().stream()
+                .mapToInt(CartItem::getQuantity)
+                .sum();
+    }
+    private int calculateTotalProducts(Cart cart) {
+        return cart.getItems().size();
+    }
+    private CartListResponse buildCartListResponse(List<CartResponse> carts) {
+
+        CartListResponse response = new CartListResponse();
+        response.setCarts(carts);
+        response.setTotal((long) carts.size());
+        response.setSkip(0);
+        response.setLimit(carts.size());
+
+        return response;
+    }
+}
+```
+```
+public class CartMapper {
+    public static CartResponse toCartDto(Cart cart,
+                                         BigDecimal total,
+                                         int totalProducts,
+                                         int totalQuantity) {
+        List<CartItemResponse> items = cart.getItems().stream()
+                .map(CartMapper::toCartItemDto)
+                .toList();
+
+        CartResponse response = new CartResponse();
+
+        response.setId(cart.getId());
+        response.setProducts(items);
+        response.setUserId(cart.getUserId());
+        response.setTotal(total);
+        response.setTotalProducts(totalProducts);
+        response.setTotalQuantity(totalQuantity);
+
+        return response;
+    }
+
+    private static CartItemResponse toCartItemDto(CartItem item) {
+
+        Product product = item.getProduct();
+
+        CartItemResponse res = new CartItemResponse();
+
+        res.setId(product.getId());
+        res.setTitle(product.getTitle());
+        res.setPrice(product.getPrice());
+        res.setThumbnail(product.getThumbnail());
+
+        res.setQuantity(item.getQuantity());
+
+        res.setTotal(
+                product.getPrice()
+                        .multiply(BigDecimal.valueOf(item.getQuantity()))
+        );
+
+        return res;
+    }
+}
+```
