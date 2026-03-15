@@ -141,3 +141,76 @@ spring.web.resources.add-mappings=false
         );
     }
 ```
+6.
+- Ngày giờ: 15/03/2006 11:4
+- Công cụ: ChatGPT
+- Prompt: Xây dựng GET localhost:8080/products/{id}. Rồi xử lí các lỗi validation và exception
+- Sau đó: thêm class ProductNotFoundException, thêm hàm getProductById vào ProductService, thêm vào ProductController, thêm 3 ExceptionHandler vào GlobalExceptionHandler là handleProductNotFound, handleProductConstraintViolation, handleProductMethodArgumentTypeMismatch
+```
+@GetMapping("/{id}")
+    public ResponseEntity<ProductResponse> getProductById(
+            @PathVariable
+            @Positive(message = "id must be greater than 0")
+            Long id
+    ) {
+        return ResponseEntity.ok(productService.getProductById(id));
+    }
+```
+```
+@ExceptionHandler(ProductNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleProductNotFound(
+            ProductNotFoundException ex,
+            HttpServletRequest request
+    ) {
+        ErrorResponse error = new ErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.NOT_FOUND.value(),
+                HttpStatus.NOT_FOUND.getReasonPhrase(),
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+```
+```
+@ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ErrorResponse> handleProductConstraintViolation(
+            ConstraintViolationException ex,
+            HttpServletRequest request
+    ) {
+        String message = ex.getConstraintViolations()
+                .stream()
+                .map(violation -> violation.getMessage())
+                .findFirst()
+                .orElse("Validation error");
+
+        ErrorResponse error = new ErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                message,
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+```
+```
+@ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleProductMethodArgumentTypeMismatch(
+            MethodArgumentTypeMismatchException ex,
+            HttpServletRequest request
+    ) {
+
+        String paramName = ex.getName();
+        String message = paramName + " must be a number";
+
+        ErrorResponse error = new ErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                message,
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+```
