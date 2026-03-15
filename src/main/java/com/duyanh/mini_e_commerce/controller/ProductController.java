@@ -1,7 +1,10 @@
 package com.duyanh.mini_e_commerce.controller;
 
 import com.duyanh.mini_e_commerce.dto.ProductPageResponse;
+import com.duyanh.mini_e_commerce.dto.ProductQuery;
 import com.duyanh.mini_e_commerce.service.ProductService;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -16,10 +19,12 @@ public class ProductController {
     }
 
     @GetMapping({"/products", "/product"})
-    public ProductPageResponse getProducts(
-            @RequestParam(defaultValue = "12") int limit,
-            @RequestParam(defaultValue = "0") int skip
+    public ResponseEntity<ProductPageResponse> getProducts(
+            @Valid ProductQuery query
     ) {
-        return productService.getProducts(limit, skip);
+
+        return ResponseEntity.ok(
+                productService.getProducts(query.getLimit(), query.getSkip())
+        );
     }
 }

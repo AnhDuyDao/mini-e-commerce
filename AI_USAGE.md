@@ -125,3 +125,19 @@ public ProductPageResponse getProducts(int limit, int skip) {
 spring.mvc.throw-exception-if-no-handler-found=true
 spring.web.resources.add-mappings=false
 ```
+5.
+- Ngày giờ: 15/03/2006 1:10
+- Công cụ: ChatGPT
+- Prompt: Xử lí lỗi validation với enpoint GET /products?limit=-1 hoặc limit=ab
+- Sau đó: tạo dto/ProductQuery, tạo method handleMethodArgumentNotValid, refactor getProducts tại ProductController với @Valild
+```
+@GetMapping({"/products", "/product"})
+    public ResponseEntity<ProductPageResponse> getProducts(
+            @Valid ProductQuery query
+    ) {
+
+        return ResponseEntity.ok(
+                productService.getProducts(query.getLimit(), query.getSkip())
+        );
+    }
+```
