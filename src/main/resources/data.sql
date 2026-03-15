@@ -192,3 +192,27 @@ VALUES
     'https://cdn.dummyjson.com/product-images/furniture/annibale-colombo-sofa/3.webp',
     12
 );
+
+INSERT INTO cart (user_id)
+VALUES (1);
+
+INSERT INTO cart (user_id)
+VALUES (2);
+
+INSERT INTO cart_item (cart_id, product_id, quantity)
+VALUES (1, 2, 2);
+
+INSERT INTO cart_item (cart_id, product_id, quantity)
+VALUES (1, 5, 1);
+
+INSERT INTO cart_item (cart_id, product_id, quantity)
+VALUES (1, 10, 3);
+
+INSERT INTO cart_item (cart_id, product_id, quantity)
+VALUES (2, 1, 2);
+
+INSERT INTO cart_item (cart_id, product_id, quantity)
+VALUES (2, 11, 4);
+
+INSERT INTO cart_item (cart_id, product_id, quantity)
+VALUES (2, 6, 1);
