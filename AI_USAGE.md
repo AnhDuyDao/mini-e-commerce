@@ -404,3 +404,98 @@ public class CartMapper {
     }
 }
 ```
+9.
+- Ngày giờ: 15/03/2006 21:8
+- Công cụ: ChatGPT
+- Prompt: Thêm sản phẩm vào giỏ hàng. Với POST http://localhost:8080/carts
+```
+{
+  "userId": 1,
+  "products": [
+    { "productId": 2, "quantity": 2 },
+    { "productId": 5, "quantity": 1 }
+  ]
+}
+```
+- Sau đó: thêm addCart CartController, tạo dto/AddCartRequest, dto/CartProductRequest, tạo exception/InsufficientStockException, thêm vào CartService addCart xử lí thêm sản phẩm vào cart cùng các method support
+```
+@PostMapping
+    public ResponseEntity<CartResponse> addCart(
+            @Valid @RequestBody AddCartRequest request
+    ) {
+        CartResponse response = cartService.addCart(request);
+        return ResponseEntity.ok(response);
+    }
+```
+```
+public class InsufficientStockException extends RuntimeException{
+    public InsufficientStockException(Long productId) {
+        super("Not enough stock for product id: " + productId);
+    }
+}
+```
+```
+@Transactional
+    public CartResponse addCart(AddCartRequest request) {
+
+        Cart cart = new Cart();
+        cart.setUserId(request.getUserId());
+
+        List<CartItem> items = new ArrayList<>();
+
+        for (CartProductRequest p : request.getProducts()) {
+
+            Product product = getProductOrThrow(p.getProductId());
+
+            CartItem existingItem = findExistingItem(items, product.getId());
+
+            int newQuantity = existingItem == null
+                    ? p.getQuantity()
+                    : existingItem.getQuantity() + p.getQuantity();
+
+            validateStock(product, newQuantity);
+
+            if (existingItem != null) {
+                existingItem.setQuantity(newQuantity);
+            } else {
+                items.add(buildCartItem(cart, product, p.getQuantity()));
+            }
+        }
+
+        cart.setItems(items);
+
+        Cart savedCart = cartRepository.save(cart);
+
+        return buildCartResponse(savedCart);
+    }
+```
+```
+    private Product getProductOrThrow(Long productId) {
+        return productRepository.findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException(productId));
+    }
+
+    private void validateStock(Product product, Integer quantity) {
+        if (quantity > product.getStock()) {
+            throw new InsufficientStockException(product.getId());
+        }
+    }
+
+    private CartItem findExistingItem(List<CartItem> items, Long productId) {
+
+        return items.stream()
+                .filter(item -> item.getProduct().getId().equals(productId))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private CartItem buildCartItem(Cart cart, Product product, int quantity) {
+
+        CartItem item = new CartItem();
+        item.setCart(cart);
+        item.setProduct(product);
+        item.setQuantity(quantity);
+
+        return item;
+    }
+```

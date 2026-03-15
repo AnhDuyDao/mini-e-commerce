@@ -1,8 +1,11 @@
 package com.duyanh.mini_e_commerce.controller;
 
+import com.duyanh.mini_e_commerce.dto.AddCartRequest;
 import com.duyanh.mini_e_commerce.dto.CartListResponse;
+import com.duyanh.mini_e_commerce.dto.CartResponse;
 import com.duyanh.mini_e_commerce.model.Cart;
 import com.duyanh.mini_e_commerce.service.CartService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,5 +25,13 @@ public class CartController {
             @PathVariable Long userId
     ) {
         return ResponseEntity.ok(cartService.getCartsByUser(userId));
+    }
+
+    @PostMapping
+    public ResponseEntity<CartResponse> addCart(
+            @Valid @RequestBody AddCartRequest request
+    ) {
+        CartResponse response = cartService.addCart(request);
+        return ResponseEntity.ok(response);
     }
 }
