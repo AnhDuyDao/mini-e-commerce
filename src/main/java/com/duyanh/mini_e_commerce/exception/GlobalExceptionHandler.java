@@ -136,4 +136,20 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.badRequest().body(error);
     }
+    @ExceptionHandler(CartItemNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleCartItemNotFound(
+            CartItemNotFoundException ex,
+            HttpServletRequest request
+    ) {
+
+        ErrorResponse error = new ErrorResponse(
+                LocalDateTime.now(),
+                404,
+                "Not Found",
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
 }

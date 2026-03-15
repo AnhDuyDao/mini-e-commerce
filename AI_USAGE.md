@@ -499,3 +499,34 @@ public class InsufficientStockException extends RuntimeException{
         return item;
     }
 ```
+10.
+- Ngày giờ: 15/03/2006 21:57
+- Công cụ: ChatGPT
+- Prompt: Xóa sản phẩm ở giỏ hàng. Với DELETE /carts/items/{itemId}
+- Sau đó: thêm vào CartController, hàm removeItemFromCart(), tạo CartItemRepository, thêm vào CartService hàm removeItem(), tạo CartItemNotFoundException để xử lí lỗi không tìm thấy id của cartItem cần xóa
+```
+    @DeleteMapping("/items/{itemId}")
+    public ResponseEntity<Void> removeItemFromCart(
+            @PathVariable Long itemId
+    ) {
+        cartService.removeItem(itemId);
+        return ResponseEntity.noContent().build();
+    }
+```
+```
+    @Transactional
+    public void removeItem(Long itemId) {
+
+        CartItem item = cartItemRepository.findById(itemId)
+                .orElseThrow(() -> new CartItemNotFoundException(itemId));
+
+        cartItemRepository.delete(item);
+    }
+```
+```
+public class CartItemNotFoundException extends RuntimeException{
+    public CartItemNotFoundException(Long id) {
+        super("Cart item not found with id: " + id);
+    }
+}
+```

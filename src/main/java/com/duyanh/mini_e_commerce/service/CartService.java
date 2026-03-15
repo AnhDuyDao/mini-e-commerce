@@ -4,12 +4,14 @@ import com.duyanh.mini_e_commerce.dto.AddCartRequest;
 import com.duyanh.mini_e_commerce.dto.CartListResponse;
 import com.duyanh.mini_e_commerce.dto.CartProductRequest;
 import com.duyanh.mini_e_commerce.dto.CartResponse;
+import com.duyanh.mini_e_commerce.exception.CartItemNotFoundException;
 import com.duyanh.mini_e_commerce.exception.InsufficientStockException;
 import com.duyanh.mini_e_commerce.exception.ProductNotFoundException;
 import com.duyanh.mini_e_commerce.mapper.CartMapper;
 import com.duyanh.mini_e_commerce.model.Cart;
 import com.duyanh.mini_e_commerce.model.CartItem;
 import com.duyanh.mini_e_commerce.model.Product;
+import com.duyanh.mini_e_commerce.repository.CartItemRepository;
 import com.duyanh.mini_e_commerce.repository.CartRepository;
 import com.duyanh.mini_e_commerce.repository.ProductRepository;
 import jakarta.transaction.Transactional;
@@ -23,10 +25,12 @@ import java.util.List;
 public class CartService {
     private final CartRepository cartRepository;
     private final ProductRepository productRepository;
+    private final CartItemRepository cartItemRepository;
 
-    public CartService(CartRepository cartRepository, ProductRepository productRepository) {
+    public CartService(CartRepository cartRepository, ProductRepository productRepository, CartItemRepository cartItemRepository) {
         this.cartRepository = cartRepository;
         this.productRepository = productRepository;
+        this.cartItemRepository = cartItemRepository;
     }
 
     public CartListResponse getCartsByUser(Long userId) {
@@ -74,6 +78,14 @@ public class CartService {
         return buildCartResponse(savedCart);
     }
 
+    @Transactional
+    public void removeItem(Long itemId) {
+
+        CartItem item = cartItemRepository.findById(itemId)
+                .orElseThrow(() -> new CartItemNotFoundException(itemId));
+
+        cartItemRepository.delete(item);
+    }
 
     private CartResponse buildCartResponse(Cart cart) {
 
